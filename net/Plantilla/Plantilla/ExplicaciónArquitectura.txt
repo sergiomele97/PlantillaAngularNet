@@ -1,0 +1,17 @@
+﻿En Resumen:
+
+Esta estructura, conocida como arquitectura de capas o arquitectura hexagonal, 
+es una práctica recomendada para desarrollar aplicaciones web escalables y mantenibles. 
+Al separar las preocupaciones, se logra un código más limpio, organizado y fácil de entender.
+
+1. Un cliente envía una solicitud HTTP a un **controlador** para crear un nuevo usuario.
+2. El controlador llama a un **servicio** para registrar al usuario.
+3. El servicio valida los datos del usuario y llama a un **repositorio** para guardar los datos en la base de datos.
+4. El repositorio utiliza **Entity Framework** para realizar la operación de inserción.
+5. El servicio devuelve el usuario creado al controlador.
+6. El controlador devuelve una respuesta HTTP al cliente.
+
+
+// Capa de interfaz de usuario (Controllers)
+// Capa de lógica de negocio (Servicios)
+// Capa de acceso a datos (Repositorios y DbContext)
