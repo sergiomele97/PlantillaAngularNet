@@ -1,10 +1,7 @@
 {
-    "name": "backend",
+    "name": "errores2",
     "files": [
-        "net\\Plantilla\\Plantilla\\Controllers\\RegistroController.cs",
-        "net\\Plantilla\\Plantilla\\DbContext\\DbContext.cs",
-        "net\\Plantilla\\Plantilla\\Entidades\\User.cs",
-        "net\\Plantilla\\Plantilla\\Program.cs",
-        "net\\Plantilla\\Plantilla\\Repositorios\\IUserRepository.cs"
+        "net\\Plantilla\\Plantilla\\Controllers\\UserController.cs",
+        "net\\Plantilla\\Plantilla\\Servicios\\IUserService.cs"
     ]
 }

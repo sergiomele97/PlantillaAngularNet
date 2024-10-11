@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Plantilla.Data.Entidades;
+using Plantilla.Modelos.Entidades;
 
-namespace Plantilla.Data.Contextos
+namespace Plantilla.Data.BBDD.Contexto
 {
     public class MyDbContext : IdentityDbContext<User>
     {
-        public MyDbContext(DbContextOptions<DbContext> options)
+        // Cambia DbContext por MyDbContext en el constructor
+        public MyDbContext(DbContextOptions<MyDbContext> options)
             : base(options)
         {
         }
@@ -22,5 +23,8 @@ namespace Plantilla.Data.Contextos
                 entity.HasIndex(e => e.Email).IsUnique(); // El correo electrónico debe ser único
             });
         }
+
+        // DbSet para tus entidades
+        public DbSet<User> Users { get; set; }
     }
 }

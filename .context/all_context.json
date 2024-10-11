@@ -2,5 +2,36 @@
     {
         "name": "default",
         "files": []
+    },
+    {
+        "name": "backend",
+        "files": [
+            "net\\Plantilla\\Plantilla\\Controllers\\RegistroController.cs",
+            "net\\Plantilla\\Plantilla\\DbContext\\DbContext.cs",
+            "net\\Plantilla\\Plantilla\\Entidades\\User.cs",
+            "net\\Plantilla\\Plantilla\\Program.cs",
+            "net\\Plantilla\\Plantilla\\Repositorios\\IUserRepository.cs"
+        ]
+    },
+    {
+        "name": "backend2",
+        "files": [
+            "net\\Plantilla\\Plantilla\\Controllers\\UserController.cs",
+            "net\\Plantilla\\Plantilla\\Data\\BBDD\\Contexto\\DbContext.cs",
+            "net\\Plantilla\\Plantilla\\Data\\Repositorios\\IUserRepository.cs",
+            "net\\Plantilla\\Plantilla\\Modelos\\Entidades\\User.cs",
+            "net\\Plantilla\\Plantilla\\Program.cs",
+            "net\\Plantilla\\Plantilla\\Modelos\\DTOs\\CreateUserDto.cs",
+            "net\\Plantilla\\Plantilla\\Modelos\\DTOs\\UserDto.cs"
+        ]
+    },
+    {
+        "name": "errorhandling",
+        "files": [
+            "net\\Plantilla\\Plantilla\\Controllers\\UserController.cs",
+            "net\\Plantilla\\Plantilla\\Data\\Repositorios\\IUserRepository.cs",
+            "net\\Plantilla\\Plantilla\\Servicios\\IUserService.cs",
+            "net\\Plantilla\\Plantilla\\Middleware\\GlobalExceptionHandlerMiddleware.cs"
+        ]
     }
 ]
