@@ -30,10 +30,11 @@ namespace Plantilla.Data.Repositorios
             }
             else
             {
-                // Manejo de errores: lanzar una excepción o retornar un error específico
-                throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Error de creación de usuario: {errors}");
             }
         }
+
 
         public async Task<User> GetUserByIdAsync(string id)
         {
