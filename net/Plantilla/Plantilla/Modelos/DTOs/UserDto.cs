@@ -6,6 +6,7 @@ namespace Plantilla.Modelos.DTOs
     {
         [Required(ErrorMessage = "Email es obligatorio.")]
         [EmailAddress(ErrorMessage = "Email inválido.")]
+        [StringLength(100)]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "La contraseña es obligatoria.")]

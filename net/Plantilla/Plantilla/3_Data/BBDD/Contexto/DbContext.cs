@@ -6,7 +6,6 @@ namespace Plantilla.Data.BBDD.Contexto
 {
     public class MyDbContext : IdentityDbContext<User>
     {
-        // Cambia DbContext por MyDbContext en el constructor
         public MyDbContext(DbContextOptions<MyDbContext> options)
             : base(options)
         {
@@ -20,7 +19,7 @@ namespace Plantilla.Data.BBDD.Contexto
             // Puedes agregar restricciones adicionales a los modelos si es necesario
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasIndex(e => e.Email).IsUnique(); // El correo electrónico debe ser único
+                entity.HasIndex(e => e.Email).IsUnique();
             });
         }
 

@@ -15,3 +15,6 @@ Al separar las preocupaciones, se logra un código más limpio, organizado y fá
 // Capa de interfaz de usuario (Controllers)
 // Capa de lógica de negocio (Servicios)
 // Capa de acceso a datos (Repositorios y DbContext)
+
+Tambien tenemos un middleware para gestionar los errores.
+Nadie gestiona los errores, llegan al middleware y este se encarga

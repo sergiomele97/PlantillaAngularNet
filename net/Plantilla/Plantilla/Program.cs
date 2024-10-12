@@ -11,42 +11,72 @@ namespace Plantilla
     {
         public static void Main(string[] args)
         {
+            //  BUILDER: Configura los servicios ----------------------------------------------------------------------------
             var builder = WebApplication.CreateBuilder(args);
-            builder.Configuration.AddUserSecrets<Program>();
 
-            // Configuración del contexto de la base de datos
+            //      3.3_DbContext
             builder.Services.AddDbContext<MyDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Agregar Identity
+            //      3.2_Identity
             builder.Services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<MyDbContext>()
                 .AddDefaultTokenProviders();
 
-            // Configuración del repositorio de usuarios
+            //      3.1_Repositorio usuarios
             builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-            // Registrar el servicio de usuario
+            //      2_Servicio usuarios
             builder.Services.AddScoped<IUserService, UserService>();
 
+            //      1_Controladores
             builder.Services.AddControllers();
+
+            //      Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            //  APP: Configura el pipeline de middleware ------------------------------------------------------------------
             var app = builder.Build();
 
+            //      Middleware errores: Tiene que ir el primero
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
+            //      Variables de entorno
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
+            //      Redirección Https
             app.UseHttpsRedirection();
-            app.UseAuthentication(); // Middleware de autenticación
-            app.UseAuthorization();  // Middleware de autorización
 
+            //      Autenticación
+            app.UseAuthentication();
+
+            //      Autorización
+            app.UseAuthorization();
+
+            //      Configurar cabeceras de seguridad
+            app.Use(async (context, next) =>
+            {
+                // Content Security Policy
+                context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+
+                // Strict Transport Security
+                context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+
+                // X-Content-Type-Options
+                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+
+                // X-Frame-Options
+                context.Response.Headers.Add("X-Frame-Options", "DENY");
+
+                await next();
+            });
+
+            //      Mapear los controladores: Tiene que ir el último
             app.MapControllers();
             app.Run();
         }

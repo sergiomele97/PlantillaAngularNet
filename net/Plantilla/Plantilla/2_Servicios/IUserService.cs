@@ -2,6 +2,7 @@
 using Plantilla.Modelos.DTOs;
 using Plantilla.Data.Repositorios;
 using System;
+using System.Threading.Tasks;
 
 namespace Plantilla.Services
 {
@@ -36,7 +37,7 @@ namespace Plantilla.Services
                 Email = userDto.Email
             };
 
-            // Crea el usuario
+            // Crea el usuario con la contraseña
             return await _userRepository.CreateUserAsync(user, userDto.Password);
         }
 
@@ -44,6 +45,5 @@ namespace Plantilla.Services
         {
             return await _userRepository.GetUserByIdAsync(id);
         }
-
     }
 }

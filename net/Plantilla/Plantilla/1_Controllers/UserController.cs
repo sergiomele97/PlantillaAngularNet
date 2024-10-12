@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Plantilla.Modelos.DTOs;
 using Plantilla.Services;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyApp.Controllers
 {
@@ -21,12 +22,14 @@ namespace MyApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                
-                return BadRequest(ModelState);
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                return BadRequest(new ApiResponse<object>(false, "Validation failed", null, errors));
             }
-            
+
             var createdUser = await _userService.CreateUserAsync(userDto);
-            return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
+            var createdUserDto = UserMapper.ToDto(createdUser);
+
+            return CreatedAtAction(nameof(GetUser), new { id = createdUserDto.Email }, new ApiResponse<UserDto>(true, "User created successfully", createdUserDto));
         }
 
         [HttpGet("{id}")]
@@ -36,11 +39,11 @@ namespace MyApp.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse<object>(false, "User not found", null));
             }
 
-            return Ok(user);
+            var userDto = UserMapper.ToDto(user);
+            return Ok(new ApiResponse<UserDto>(true, "User retrieved successfully", userDto));
         }
-
     }
 }
