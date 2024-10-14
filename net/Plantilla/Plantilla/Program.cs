@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Plantilla._2_Servicios;
 using Plantilla.Data.BBDD.Contexto;
-using Plantilla.Data.Repositorios;
 using Plantilla.Modelos.Entidades;
 using Plantilla.Services;
+using Serilog;
 using System.Text;
 
 namespace Plantilla
@@ -14,88 +14,109 @@ namespace Plantilla
     {
         public static void Main(string[] args)
         {
-            //  BUILDER: Configura los servicios ----------------------------------------------------------------------------
-            var builder = WebApplication.CreateBuilder(args);
+            // Configura Serilog
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
 
-            //      3.3_DbContext
-            builder.Services.AddDbContext<MyDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            try
+            {
+                Log.Information("Iniciando la aplicación");
 
-            //      3.2_Identity
-            builder.Services.AddIdentity<User, IdentityRole>()
+                // BUILDER: Configura los servicios ----------------------------------------------------------------------------
+                var builder = WebApplication.CreateBuilder(args);
+
+                // 3.2_DbContext
+                builder.Services.AddDbContext<MyDbContext>(options =>
+                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+                // 3.1_Identity
+                builder.Services.AddIdentity<User, IdentityRole>(options =>
+                {
+                    // Configuración de opciones de Identity para prevenir ataques de fuerza bruta
+                    options.Lockout.MaxFailedAccessAttempts = 5; // Máximo de intentos fallidos
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); // Tiempo de bloqueo
+                    options.Lockout.AllowedForNewUsers = true; // Permitir bloqueo para nuevos usuarios
+                    options.User.RequireUniqueEmail = true; // Requerir correos electrónicos únicos
+                })
                 .AddEntityFrameworkStores<MyDbContext>()
                 .AddDefaultTokenProviders();
 
-            //      3.1_Repositorio usuarios
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
+                // 2.1_Servicio usuarios
+                builder.Services.AddScoped<IUserService, UserService>();
 
-            //      2.1_Servicio usuarios
-            builder.Services.AddScoped<IUserService, UserService>();
+                // 2.2_Servicio de JWT en método separado
+                ConfigureJwtAuthentication(builder);
 
-            //      2.2_Servicio de JWT en método separado
-            ConfigureJwtAuthentication(builder);
+                // 1_Controladores
+                builder.Services.AddControllers();
 
-            //      1_Controladores
-            builder.Services.AddControllers();
+                // Swagger
+                builder.Services.AddEndpointsApiExplorer();
+                builder.Services.AddSwaggerGen();
 
-            //      Swagger
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+                // APP: Configura el pipeline de middleware ------------------------------------------------------------------
+                var app = builder.Build();
 
-            //  APP: Configura el pipeline de middleware ------------------------------------------------------------------
-            var app = builder.Build();
+                // Middleware de logging de solicitudes y respuestas
+                app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
-            //      Middleware errores: Tiene que ir el primero
-            app.UseMiddleware<ErrorHandlingMiddleware>();
+                // Middleware loging de errores: Tiene que ir el primero
+                app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            //      Variables de entorno
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                // Variables de entorno
+                if (app.Environment.IsDevelopment())
+                {
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                }
+
+                // Redirección Https
+                app.UseHttpsRedirection();
+
+                // Autenticación
+                app.UseAuthentication();
+
+                // Autorización
+                app.UseAuthorization();
+
+                // Configurar cabeceras de seguridad
+                app.Use(async (context, next) =>
+                {
+                    // Content Security Policy
+                    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+
+                    // Strict Transport Security
+                    context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+
+                    // X-Content-Type-Options
+                    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+
+                    // X-Frame-Options
+                    context.Response.Headers.Add("X-Frame-Options", "DENY");
+
+                    await next();
+                });
+
+                // Mapear los controladores: Tiene que ir el último
+                app.MapControllers();
+                app.Run();
             }
-
-            //      Redirección Https
-            app.UseHttpsRedirection();
-
-            //      Autenticación
-            app.UseAuthentication();
-
-            //      Autorización
-            app.UseAuthorization();
-
-            //      Configurar cabeceras de seguridad
-            app.Use(async (context, next) =>
+            catch (Exception ex)
             {
-                // Content Security Policy
-                context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
-
-                // Strict Transport Security
-                context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-
-                // X-Content-Type-Options
-                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-
-                // X-Frame-Options
-                context.Response.Headers.Add("X-Frame-Options", "DENY");
-
-                await next();
-            });
-
-            //      Mapear los controladores: Tiene que ir el último
-            app.MapControllers();
-            app.Run();
+                Log.Fatal(ex, "La aplicación no pudo iniciarse");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-
-
-
-
-
-
-
-
-        //  MÉTODOS EXTRAIDOS ------------------------------------------------------------------
+        // MÉTODOS EXTRAIDOS ------------------------------------------------------------------
 
         // Configurar JWT
         private static void ConfigureJwtAuthentication(WebApplicationBuilder builder)

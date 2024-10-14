@@ -1,6 +1,5 @@
 ﻿using Plantilla.Modelos.Entidades;
 using Plantilla.Modelos.DTOs;
-using Plantilla.Data.Repositorios;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -10,25 +9,25 @@ namespace Plantilla.Services
     public interface IUserService
     {
         Task<User> CreateUserAsync(UserDto userDto);
-        Task<User> GetUserByEmailAsync(string email); 
-        Task<User> AuthenticateAsync(string email, string password); 
+        Task<User> GetUserByEmailAsync(string email);
+        Task<User> AuthenticateAsync(string email, string password);
     }
 
     public class UserService : IUserService
     {
-        private readonly IUserRepository _userRepository;
-        private readonly UserManager<User> _userManager; 
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public UserService(IUserRepository userRepository, UserManager<User> userManager)
+        public UserService(UserManager<User> userManager, SignInManager<User> signInManager)
         {
-            _userRepository = userRepository;
-            _userManager = userManager; 
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public async Task<User> CreateUserAsync(UserDto userDto)
         {
             // Verifica si el email ya está registrado
-            var existingUser = await _userRepository.GetUserByEmailAsync(userDto.Email);
+            var existingUser = await _userManager.FindByEmailAsync(userDto.Email);
             if (existingUser != null)
             {
                 throw new ArgumentException("El email ya está registrado.");
@@ -42,33 +41,39 @@ namespace Plantilla.Services
             };
 
             // Crea el usuario con la contraseña
-            return await _userRepository.CreateUserAsync(user, userDto.Password);
+            var result = await _userManager.CreateAsync(user, userDto.Password);
+            if (!result.Succeeded)
+            {
+                // Extraer los mensajes de error de la lista de errores
+                var errorMessages = result.Errors.Select(error => error.Description);
+
+                // Lanzar una excepción con los mensajes de error
+                throw new ArgumentException("Error al crear el usuario: " + string.Join(", ", errorMessages));
+            }
+
+            return user;
         }
 
         public async Task<User> GetUserByEmailAsync(string email)
         {
-            return await _userRepository.GetUserByEmailAsync(email);
+            // Usa UserManager para obtener el usuario por email
+            return await _userManager.FindByEmailAsync(email);
         }
 
-        
         public async Task<User> AuthenticateAsync(string email, string password)
         {
-            // Obtiene el usuario por email
-            var user = await _userRepository.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                return null; 
-            }
+            var result = await _signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: true);
 
-            // Verifica la contraseña
-            var passwordHasher = new PasswordHasher<User>(); 
-            var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            if (passwordVerificationResult != PasswordVerificationResult.Success)
+            if (result.Succeeded)
             {
-                return null; 
+                // Si el inicio de sesión fue exitoso, busca el usuario
+                var user = await _userManager.FindByEmailAsync(email);
+                return user;
             }
-
-            return user; 
+            else
+            {
+                return null;
+            }
         }
     }
 }
