@@ -1,0 +1,15 @@
+<!-- src/app/registro/registro.component.html -->
+<form (ngSubmit)="register()">
+  <label for="email">Email:</label>
+  <input id="email" [(ngModel)]="user.email" name="email" required />
+  <br />
+  <label for="password">Contraseña:</label>
+  <input id="password" [(ngModel)]="user.password" name="password" required type="password" />
+  <br />
+  
+  <!-- Caja de texto para mostrar las respuestas del servidor -->
+  <p *ngIf="serverResponse">{{ serverResponse }}</p>
+
+  <button type="submit">Registrar</button>
+  <p><a routerLink="/login">Ir a Login</a></p> <!-- Enlace a Login -->
+</form>

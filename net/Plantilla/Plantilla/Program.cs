@@ -30,29 +30,31 @@ namespace Plantilla
                 // BUILDER: Configura los servicios ----------------------------------------------------------------------------
                 var builder = WebApplication.CreateBuilder(args);
 
-                // 3.2_DbContext
+                // Configura DbContext
                 builder.Services.AddDbContext<MyDbContext>(options =>
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-                // 3.1_Identity
+                // Configura Identity
                 builder.Services.AddIdentity<User, IdentityRole>(options =>
                 {
-                    // Configuración de opciones de Identity para prevenir ataques de fuerza bruta
-                    options.Lockout.MaxFailedAccessAttempts = 5; // Máximo de intentos fallidos
-                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); // Tiempo de bloqueo
-                    options.Lockout.AllowedForNewUsers = true; // Permitir bloqueo para nuevos usuarios
-                    options.User.RequireUniqueEmail = true; // Requerir correos electrónicos únicos
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                    options.Lockout.AllowedForNewUsers = true;
+                    options.User.RequireUniqueEmail = true;
                 })
                 .AddEntityFrameworkStores<MyDbContext>()
                 .AddDefaultTokenProviders();
 
-                // 2.1_Servicio usuarios
+                // Configura servicios
                 builder.Services.AddScoped<IUserService, UserService>();
 
-                // 2.2_Servicio de JWT en método separado
+                // Configura JWT
                 ConfigureJwtAuthentication(builder);
 
-                // 1_Controladores
+                // Configura CORS
+                ConfigureCors(builder);
+
+                // Controladores
                 builder.Services.AddControllers();
 
                 // Swagger
@@ -78,6 +80,9 @@ namespace Plantilla
                 // Redirección Https
                 app.UseHttpsRedirection();
 
+                // Middleware de CORS
+                app.UseCors("AllowDevelopment");
+
                 // Autenticación
                 app.UseAuthentication();
 
@@ -87,16 +92,9 @@ namespace Plantilla
                 // Configurar cabeceras de seguridad
                 app.Use(async (context, next) =>
                 {
-                    // Content Security Policy
                     context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
-
-                    // Strict Transport Security
                     context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-
-                    // X-Content-Type-Options
                     context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-
-                    // X-Frame-Options
                     context.Response.Headers.Add("X-Frame-Options", "DENY");
 
                     await next();
@@ -116,9 +114,9 @@ namespace Plantilla
             }
         }
 
-        // MÉTODOS EXTRAIDOS ------------------------------------------------------------------
+        
 
-        // Configurar JWT
+        // MÉTODOS EXTRAIDOS ------------------------------------------------------------------
         private static void ConfigureJwtAuthentication(WebApplicationBuilder builder)
         {
             var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
@@ -144,9 +142,24 @@ namespace Plantilla
             builder.Services.AddScoped<TokenService>(provider =>
             {
                 var secret = builder.Configuration["JwtConfig:Secret"];
-                var expirationInMinutes = 60; // Establece el tiempo de expiración como desees
+                var expirationInMinutes = 60;
                 return new TokenService(secret, expirationInMinutes);
             });
         }
+
+        private static void ConfigureCors(WebApplicationBuilder builder)
+        {
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowDevelopment", builder =>
+                {
+                    builder.WithOrigins("http://localhost:4200")
+                           .AllowAnyHeader()
+                           .AllowAnyMethod()
+                           .AllowCredentials();
+                });
+            });
+        }
+
     }
 }

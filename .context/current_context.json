@@ -2,6 +2,12 @@
     "name": "errores2",
     "files": [
         "net\\Plantilla\\Plantilla\\Controllers\\UserController.cs",
-        "net\\Plantilla\\Plantilla\\Servicios\\IUserService.cs"
+        "net\\Plantilla\\Plantilla\\Servicios\\IUserService.cs",
+        "angular\\src\\main.ts",
+        "angular\\src\\app\\app.component.ts",
+        "angular\\src\\app\\app.config.ts",
+        "angular\\src\\app\\services\\auth.service.ts",
+        "angular\\src\\app\\services\\auth.service.spec.ts",
+        "angular\\src\\app\\login\\login.component.ts"
     ]
 }

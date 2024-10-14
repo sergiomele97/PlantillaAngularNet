@@ -1,0 +1,14 @@
+<form (ngSubmit)="login()">
+  <label for="email">Email:</label>
+  <input id="email" [(ngModel)]="user.email" name="email" required />
+  <br />
+  <label for="password">Contraseña:</label>
+  <input id="password" [(ngModel)]="user.password" name="password" required type="password" />
+  <br />
+  
+  <!-- Caja de texto para mostrar las respuestas del servidor -->
+  <p *ngIf="serverResponse">{{ serverResponse }}</p>
+
+  <button type="submit">Iniciar Sesión</button>
+  <p><a routerLink="/registro">Ir a Registro</a></p>
+</form>
