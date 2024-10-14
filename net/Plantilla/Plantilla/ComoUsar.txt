@@ -1,0 +1,3 @@
+Configurar secretos:
+	- JWT tokens
+	- Cadena de conexion BD

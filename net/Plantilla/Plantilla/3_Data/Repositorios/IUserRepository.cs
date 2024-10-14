@@ -8,8 +8,7 @@ namespace Plantilla.Data.Repositorios
     public interface IUserRepository
     {
         Task<User> CreateUserAsync(User user, string password);
-        Task<User> GetUserByIdAsync(string id);
-        Task<User> GetUserByEmailAsync(string email); // Agregar este método
+        Task<User> GetUserByEmailAsync(string email); 
     }
 
     public class UserRepository : IUserRepository
@@ -35,15 +34,8 @@ namespace Plantilla.Data.Repositorios
             }
         }
 
-
-        public async Task<User> GetUserByIdAsync(string id)
-        {
-            return await _userManager.FindByIdAsync(id);
-        }
-
         public async Task<User> GetUserByEmailAsync(string email)
         {
-            // Buscar el usuario por email
             return await _userManager.FindByEmailAsync(email);
         }
     }

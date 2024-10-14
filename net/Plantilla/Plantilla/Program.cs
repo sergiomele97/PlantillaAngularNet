@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Plantilla._2_Servicios;
 using Plantilla.Data.BBDD.Contexto;
 using Plantilla.Data.Repositorios;
 using Plantilla.Modelos.Entidades;
 using Plantilla.Services;
+using System.Text;
 
 namespace Plantilla
 {
@@ -26,8 +29,11 @@ namespace Plantilla
             //      3.1_Repositorio usuarios
             builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-            //      2_Servicio usuarios
+            //      2.1_Servicio usuarios
             builder.Services.AddScoped<IUserService, UserService>();
+
+            //      2.2_Servicio de JWT en método separado
+            ConfigureJwtAuthentication(builder);
 
             //      1_Controladores
             builder.Services.AddControllers();
@@ -79,6 +85,47 @@ namespace Plantilla
             //      Mapear los controladores: Tiene que ir el último
             app.MapControllers();
             app.Run();
+        }
+
+
+
+
+
+
+
+
+
+        //  MÉTODOS EXTRAIDOS ------------------------------------------------------------------
+
+        // Configurar JWT
+        private static void ConfigureJwtAuthentication(WebApplicationBuilder builder)
+        {
+            var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+            builder.Services.AddScoped<TokenService>(provider =>
+            {
+                var secret = builder.Configuration["JwtConfig:Secret"];
+                var expirationInMinutes = 60; // Establece el tiempo de expiración como desees
+                return new TokenService(secret, expirationInMinutes);
+            });
         }
     }
 }

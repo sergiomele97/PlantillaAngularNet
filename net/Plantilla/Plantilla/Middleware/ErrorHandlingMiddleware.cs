@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Plantilla.Modelos.DTOs;
 using System.Net;
 using System.Text.Json;
 
@@ -42,7 +43,6 @@ public class ErrorHandlingMiddleware
                 break;
 
             case InvalidOperationException invOpEx:
-                // Detectamos excepciones relacionadas con operaciones inválidas, como errores de creación de usuarios
                 code = HttpStatusCode.BadRequest;
                 message = invOpEx.Message;
                 break;
@@ -73,7 +73,6 @@ public class ErrorHandlingMiddleware
                 break;
 
             default:
-                // Si no es una excepción específica, devolvemos un error genérico 500
                 message = "Ocurrió un error inesperado.";
                 break;
         }
@@ -81,13 +80,9 @@ public class ErrorHandlingMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
 
-        var response = new
-        {
-            statusCode = context.Response.StatusCode,
-            message
-        };
+        // Crear la respuesta estandarizada
+        var response = new ApiResponse<object>(false, message, null, new List<string> { message });
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
-
 }
